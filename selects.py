@@ -17,26 +17,34 @@ def show_all_persons():
     conn.close()
 
 def search_by_first_name():
-    name = input("Write the first name to search: ")
+    name = input("Digite o primeiro nome para pesquisa: ").strip().upper()
     conn = connect_to_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM persons WHERE first_name=?", (name,))
+    cur.execute("SELECT * FROM persons WHERE UPPER(first_name) = ?", (name,))
     rows = cur.fetchall()
-    for row in rows:
-        print(row)
+    if rows:
+        for row in rows:
+            print(row)
+    else:
+        print(f"Person with that first name not found '{name}'.")
     cur.close()
     conn.close()
 
 def search_by_last_name():
-    name = input("Write the last name to search: ")
+    name = input("Digite o último nome para pesquisa: ").strip().upper()
     conn = connect_to_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM persons WHERE last_name=?", (name,))
+    cur.execute("SELECT * FROM persons WHERE UPPER(last_name) = ?", (name,))
     rows = cur.fetchall()
-    for row in rows:
-        print(row)
+    if rows:
+        for row in rows:
+            print(row)
+    else:
+        print(f"Person with that last name not found '{name}'.")
     cur.close()
     conn.close()
+    
+
 
 def menu():
     while True:
