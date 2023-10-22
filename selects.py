@@ -1,72 +1,54 @@
-import sqlite3
+import xmlrpc.client
 import os
 
-DATABASE_FILE = "database.db"
-
-def connect_to_db():
-    return sqlite3.connect(DATABASE_FILE)
-
-def show_all_persons():
-    conn = connect_to_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM persons")
-    rows = cur.fetchall()
-    for row in rows:
-        print(row)
-    cur.close()
-    conn.close()
-
-def search_by_first_name():
-    name = input("Digite o primeiro nome para pesquisa: ").strip().upper()
-    conn = connect_to_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM persons WHERE UPPER(first_name) = ?", (name,))
-    rows = cur.fetchall()
-    if rows:
-        for row in rows:
-            print(row)
-    else:
-        print(f"Person with that first name not found '{name}'.")
-    cur.close()
-    conn.close()
-
-def search_by_last_name():
-    name = input("Digite o último nome para pesquisa: ").strip().upper()
-    conn = connect_to_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM persons WHERE UPPER(last_name) = ?", (name,))
-    rows = cur.fetchall()
-    if rows:
-        for row in rows:
-            print(row)
-    else:
-        print(f"Person with that last name not found '{name}'.")
-    cur.close()
-    conn.close()
-    
-
+server = xmlrpc.client.ServerProxy('http://localhost:8000')
 
 def menu():
+
     while True:
+        os.system('cls')
         print("\n--- Menu ---")
         print("1. Show all persons")
         print("2. Search by first name")
         print("3. Search by last name")
-        print("4. Exit")
-        
+        print("4. Count Persons by name")
+        print("5. Exit")
+
         choice = input("Choose an option: ")
 
         if choice == "1":
-            show_all_persons()
+            os.system('cls')
+            persons = server.get_all_persons()
+            for person in persons:
+                print(person)
+            input("Press 'Enter' to continue to menu")
         elif choice == "2":
-            search_by_first_name()
+            os.system('cls')
+            first_name = input("Enter the first name to search: ").strip()
+            persons = server.search_person_by_first_name(first_name)
+            for person in persons:
+                print(person)
+            input("Press 'Enter' to continue to menu")
         elif choice == "3":
-            search_by_last_name()
+            os.system('cls')
+            last_name = input("Enter the last name to search: ").strip()
+            persons = server.search_person_by_last_name(last_name)
+            for person in persons:
+                print(person)
+            input("Press 'Enter' to continue to menu")
         elif choice == "4":
-            print("Closing...")
+            os.system('cls')
+            persons = server.count_and_sort_persons_by_first_name()
+            for person in persons:
+                print(person)
+            input("Press 'Enter' to continue to menu")
+        elif choice == "5":
+            os.system('cls')
+            print("Exiting...")
             break
         else:
-            print("Option invalid! Try again.")
+            print("Invalid option! Try again.")
+
 
 if __name__ == "__main__":
     menu()

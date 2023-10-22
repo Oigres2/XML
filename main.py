@@ -1,6 +1,10 @@
 import csv
 import xml.etree.ElementTree as ET
 import sqlite3
+from xmlrpc.server import SimpleXMLRPCServer
+
+server = SimpleXMLRPCServer(('localhost', 8000))
+server.register_introspection_functions()
 
 def read_csv(filename):
     data = []
@@ -45,8 +49,93 @@ def write_to_sqlite(data, database_file):
     cur.close()
     conn.close()
 
+# Funções remotas que o cliente pode chamar
+def get_all_persons():
+    persons = []
+    for person in root.findall('person'):
+        person_data = {
+            "id": person.find('id').text,
+            "first_name": person.find('first_name').text,
+            "last_name": person.find('last_name').text,
+            "gender": person.find('gender').text,
+            "ip_address": person.find('ip_address').text,
+        }
+        formatted_data = format_person_data(person_data)
+        persons.append(formatted_data)
+    return persons
+
+def search_person_by_first_name(first_name):
+    first_name = first_name.upper()
+    persons = []
+    for person in root.findall('person'):
+        if person.find('first_name').text.upper() == first_name:
+            person_data = {
+                "id": person.find('id').text,
+                "first_name": person.find('first_name').text,
+                "last_name": person.find('last_name').text,
+                "gender": person.find('gender').text,
+                "ip_address": person.find('ip_address').text,
+            }
+            formatted_data = format_person_data(person_data)
+            persons.append(formatted_data)
+    return persons
+
+def search_person_by_last_name(last_name):
+    last_name = last_name.upper()
+    persons = []
+    for person in root.findall('person'):
+        if person.find('last_name').text.upper() == last_name:
+            person_data = {
+                "id": person.find('id').text,
+                "first_name": person.find('first_name').text,
+                "last_name": person.find('last_name').text,
+                "gender": person.find('gender').text,
+                "ip_address": person.find('ip_address').text,
+            }
+            formatted_data = format_person_data(person_data)
+            persons.append(formatted_data)
+    return persons
+
+def count_and_sort_persons_by_first_name():
+    name_count = {}
+    for person in root.findall('person'):
+        first_name = person.find('first_name').text
+        if first_name in name_count:
+            name_count[first_name] += 1
+        else:
+            name_count[first_name] = 1
+
+    sorted_results = sorted(name_count.items(), key=lambda x: x[1], reverse=True)
+
+    result = [f"{name} - {count} person{'s' if count > 1 else ''}" for name, count in sorted_results]
+    return result
+def format_person_data(person):
+    formatted_data = (
+        f"Id: {person['id']},\n"
+        f"First Name: {person['first_name']},\n"
+        f"Last Name: {person['last_name']},\n"
+        f"Gender: {person['gender']},\n"
+        f"Ip Address: {person['ip_address']}\n"
+        "-----------------------------------------------------"
+    )
+    return formatted_data
+
+# Registrar as funções remotas no servidor
+server.register_function(get_all_persons)
+server.register_function(search_person_by_first_name)
+server.register_function(search_person_by_last_name)
+server.register_function(count_and_sort_persons_by_first_name)
+
+
 if __name__ == "__main__":
-    data = read_csv("dataset.csv")
-    write_to_xml(data, "output.xml")
-    DATABASE_FILE = "database.db"
-    write_to_sqlite(data, DATABASE_FILE)
+    try:
+        data = read_csv("dataset.csv")
+        write_to_xml(data, "output.xml")
+        tree = ET.parse('output.xml')
+        root = tree.getroot()
+        DATABASE_FILE = "database.db"
+        write_to_sqlite(data, DATABASE_FILE)
+        print("Servidor RPC iniciado. Aguardando conexões...")
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("Servidor RPC encerrado.")
