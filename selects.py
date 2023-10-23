@@ -12,7 +12,8 @@ def menu():
         print("2. Search by first name")
         print("3. Search by last name")
         print("4. Count Persons by name")
-        print("5. Exit")
+        print("5. Add new person")
+        print("6. Exit")
 
         choice = input("Choose an option: ")
 
@@ -43,6 +44,16 @@ def menu():
                 print(person)
             input("Press 'Enter' to continue to menu")
         elif choice == "5":
+            os.system('cls')
+            first_name = input("Enter First Name: ").strip()
+            last_name = input("Enter Last Name: ").strip()
+            gender = input("Enter Gender: ").strip()
+            ip_address = input("Enter IP Address: ").strip()
+
+            server.add_person(first_name, last_name, gender, ip_address)
+            print("Data added successfully.")
+            input("Press 'Enter' to continue to menu")
+        elif choice == "6":
             os.system('cls')
             print("Exiting...")
             break

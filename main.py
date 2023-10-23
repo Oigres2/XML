@@ -1,6 +1,7 @@
 import csv
 import xml.etree.ElementTree as ET
 import sqlite3
+import uuid
 from xmlrpc.server import SimpleXMLRPCServer
 
 server = SimpleXMLRPCServer(('localhost', 8000))
@@ -120,12 +121,44 @@ def format_person_data(person):
     )
     return formatted_data
 
-# Registrar as funções remotas no servidor
+def add_person( first_name, last_name, gender, ip_address):
+    try:
+        while True:
+            new_id = str(uuid.uuid4())
+            
+            if any(person.find('id').text == new_id for person in root.findall('person')):
+                continue
+    
+            new_person = {
+                "id": new_id,
+                "first_name": first_name,
+                "last_name": last_name,
+                "gender": gender,
+                "ip_address": ip_address
+            }
+
+            new_person_element = ET.SubElement(root, "person")
+            for key, value in new_person.items():
+                ET.SubElement(new_person_element, key).text = value
+            tree.write("output.xml")
+
+            conn = sqlite3.connect(DATABASE_FILE)
+            cur = conn.cursor()
+            cur.execute("INSERT INTO persons (id, first_name, last_name, gender, ip_address) VALUES (?, ?, ?, ?, ?)",
+                        (new_id, first_name, last_name, gender, ip_address))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            return "Data added successfully"
+    except Exception as e:
+        return str(e)
+        
 server.register_function(get_all_persons)
 server.register_function(search_person_by_first_name)
 server.register_function(search_person_by_last_name)
 server.register_function(count_and_sort_persons_by_first_name)
-
+server.register_function(add_person)
 
 if __name__ == "__main__":
     try:
