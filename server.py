@@ -26,6 +26,7 @@ def write_to_xml(data, filename):
         ET.SubElement(person, "ip_address").text = item["ip_address"]
     
     tree = ET.ElementTree(root)
+    ET.indent(tree, space = "\t", level=0)
     tree.write(filename)
 
 def write_to_sqlite(data, database_file):
